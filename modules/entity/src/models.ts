@@ -36,7 +36,13 @@ export type UpdateNum<T> = {
   changes: Partial<T>;
 };
 
+export type UpdatePred<T> = {
+  predicate: (value: T) => boolean;
+  changes: Partial<T>;
+};
+
 export type Update<T> = UpdateStr<T> | UpdateNum<T>;
+export type UpdateMany<T> = Update<T> | UpdatePred<T>;
 
 export interface EntityState<T> {
   ids: string[] | number[];
@@ -62,7 +68,7 @@ export interface EntityStateAdapter<T> {
   removeAll<S extends EntityState<T>>(state: S): S;
 
   updateOne<S extends EntityState<T>>(update: Update<T>, state: S): S;
-  updateMany<S extends EntityState<T>>(updates: Update<T>[], state: S): S;
+  updateMany<S extends EntityState<T>>(updates: UpdateMany<T>[], state: S): S;
 
   upsertOne<S extends EntityState<T>>(update: Update<T>, state: S): S;
   upsertMany<S extends EntityState<T>>(updates: Update<T>[], state: S): S;

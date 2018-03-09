@@ -1,4 +1,10 @@
-import { EntityState, EntityStateAdapter, IdSelector, Update } from './models';
+import {
+  EntityState,
+  EntityStateAdapter,
+  IdSelector,
+  Update,
+  UpdateMany,
+} from './models';
 import { createStateOperator, DidMutate } from './state_adapter';
 
 export function createUnsortedStateAdapter<T>(
@@ -99,17 +105,30 @@ export function createUnsortedStateAdapter<T>(selectId: IdSelector<T>): any {
     return updateManyMutably([update], state);
   }
 
-  function updateManyMutably(updates: Update<T>[], state: R): DidMutate;
+  function updateManyMutably(updates: UpdateMany<T>[], state: R): DidMutate;
   function updateManyMutably(updates: any[], state: any): DidMutate {
     const newKeys: { [id: string]: string } = {};
+    const toUpdate = updates
+      .map(update => {
+        if ('id' in update) return update;
+        const predicateIds = state.ids.filter((key: any) =>
+          update.predicate(state.entities[key])
+        );
+        const updateByIds = predicateIds.map((key: any) => ({
+          id: key,
+          changes: update.changes,
+        }));
+        return updateByIds;
+      })
+      .reduce((acc, curr) => acc.concat(curr), [])
+      .filter((update: any) => update.id in state.entities);
 
-    updates = updates.filter(update => update.id in state.entities);
-
-    const didMutateEntities = updates.length > 0;
+    const didMutateEntities = toUpdate.length > 0;
 
     if (didMutateEntities) {
       const didMutateIds =
-        updates.filter(update => takeNewKey(newKeys, update, state)).length > 0;
+        toUpdate.filter((update: any) => takeNewKey(newKeys, update, state))
+          .length > 0;
 
       if (didMutateIds) {
         state.ids = state.ids.map((id: any) => newKeys[id] || id);

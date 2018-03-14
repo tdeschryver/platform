@@ -19,7 +19,7 @@ describe('Entity State Selectors', () => {
 
     beforeEach(() => {
       adapter = createEntityAdapter({
-        selectId: (book: BookModel) => book.id,
+        selectId: (book: BookModel) => book.idx,
       });
 
       state = {
@@ -66,7 +66,7 @@ describe('Entity State Selectors', () => {
 
     beforeEach(() => {
       adapter = createEntityAdapter({
-        selectId: (book: BookModel) => book.id,
+        selectId: (book: BookModel) => book.idx,
       });
 
       state = adapter.addAll(

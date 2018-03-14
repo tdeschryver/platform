@@ -136,10 +136,21 @@ export function createUnsortedStateAdapter<T>(selectId: IdSelector<T>): any {
       if (update.id in state.entities) {
         updated.push(update);
       } else {
-        added.push({
-          ...update.changes,
-          id: update.id,
-        });
+        // get the id value on the changes
+        const id = selectId(update.changes);
+        // find the key of the id, this can be wrong if multiple keys have the same value
+        // for example {xxx: 123, isbn: 123, ...}
+        const key = id
+          ? Object.keys(update.changes).find(p => update.changes[p] === id)
+          : null;
+        if (key) {
+          added.push({
+            ...update.changes,
+            [key]: update.id,
+          });
+        } else {
+          added.push(update.changes);
+        }
       }
     }
 

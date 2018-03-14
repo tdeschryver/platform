@@ -120,10 +120,18 @@ export function createSortedStateAdapter<T>(selectId: any, sort: any): any {
       if (update.id in state.entities) {
         updated.push(update);
       } else {
-        added.push({
-          ...update.changes,
-          id: update.id,
-        });
+        const id = selectId(update.changes);
+        const key = id
+          ? Object.keys(update.changes).find(p => update.changes[p] === id)
+          : null;
+        if (key) {
+          added.push({
+            ...update.changes,
+            [key]: update.id,
+          });
+        } else {
+          added.push(update.changes);
+        }
       }
     }
 

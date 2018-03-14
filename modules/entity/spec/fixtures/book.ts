@@ -1,21 +1,21 @@
 const deepFreeze = require('deep-freeze');
 
 export interface BookModel {
-  id: string;
+  idx: string;
   title: string;
 }
 
 export const AClockworkOrange: BookModel = deepFreeze({
-  id: 'aco',
+  idx: 'aco',
   title: 'A Clockwork Orange',
 });
 
 export const AnimalFarm: BookModel = deepFreeze({
-  id: 'af',
+  idx: 'af',
   title: 'Animal Farm',
 });
 
 export const TheGreatGatsby: BookModel = deepFreeze({
-  id: 'tgg',
+  idx: 'tgg',
   title: 'The Great Gatsby',
 });

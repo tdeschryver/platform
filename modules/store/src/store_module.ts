@@ -14,6 +14,7 @@ import {
   StoreFeature,
   InitialState,
   MetaReducer,
+  ActionSerializer,
 } from './models';
 import { compose, combineReducers, createReducerFactory } from './utils';
 import {
@@ -29,6 +30,7 @@ import {
   FEATURE_REDUCERS,
   _FEATURE_REDUCERS,
   _FEATURE_REDUCERS_TOKEN,
+  ACTION_SERIALIZER,
 } from './tokens';
 import { ACTIONS_SUBJECT_PROVIDERS, ActionsSubject } from './actions_subject';
 import {
@@ -86,6 +88,7 @@ export type StoreConfig<T, V extends Action = Action> = {
   initialState?: InitialState<T>;
   reducerFactory?: ActionReducerFactory<T, V>;
   metaReducers?: MetaReducer<T, V>[];
+  serializer?: ActionSerializer<V> | null;
 };
 
 @NgModule({})
@@ -134,6 +137,17 @@ export class StoreModule {
           provide: REDUCER_FACTORY,
           deps: [_REDUCER_FACTORY, META_REDUCERS],
           useFactory: createReducerFactory,
+        },
+        {
+          provide: ACTION_SERIALIZER,
+          useValue:
+            'serializer' in config
+              ? config.serializer || ((action: any) => true)
+              : // TODO: provide a better check?
+                (action: any) =>
+                  typeof action === 'object' &&
+                  action !== null &&
+                  JSON.parse(JSON.stringify(action)),
         },
         ACTIONS_SUBJECT_PROVIDERS,
         REDUCER_MANAGER_PROVIDERS,

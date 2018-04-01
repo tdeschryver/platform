@@ -5,6 +5,7 @@ export {
   ActionReducerFactory,
   MetaReducer,
   Selector,
+  ActionSerializer,
 } from './models';
 export { Store, select } from './store';
 export { combineReducers, compose, createReducerFactory } from './utils';
@@ -40,6 +41,7 @@ export {
   _FEATURE_REDUCERS,
   FEATURE_REDUCERS,
   _FEATURE_REDUCERS_TOKEN,
+  ACTION_SERIALIZER,
 } from './tokens';
 export {
   StoreModule,

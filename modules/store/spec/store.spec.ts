@@ -1,4 +1,4 @@
-import { ReflectiveInjector } from '@angular/core';
+import * as ngCore from '@angular/core'; // so we can use the `spyOn` method
 import { TestBed } from '@angular/core/testing';
 import { hot } from 'jasmine-marbles';
 import {
@@ -7,6 +7,8 @@ import {
   Store,
   StoreModule,
   select,
+  ActionSerializer,
+  ACTION_SERIALIZER,
 } from '../';
 import {
   counterReducer,
@@ -298,6 +300,89 @@ describe('ngRx Store', () => {
       store.pipe(take(1)).subscribe(val => {
         expect(val.counter4).toBeUndefined();
       });
+    });
+  });
+
+  describe('action serialization', () => {
+    const increment = () => ({ type: 'INCREMENT' });
+    const incrementNotSerializable = () => {
+      let increment: any = { type: 'INCREMENT' };
+      increment.self = increment;
+      return increment;
+    };
+
+    it('should provide a default serializer', () => {
+      setup();
+      const serializer = TestBed.get(ACTION_SERIALIZER);
+      expect(serializer).toBeDefined();
+    });
+
+    it("should throw an error when an action isn't serializable", () => {
+      setup();
+      expect(() => store.dispatch(incrementNotSerializable())).toThrowError();
+    });
+
+    it('should be possible to provide a custom serializer', (done: any) => {
+      TestBed.configureTestingModule({
+        imports: [
+          StoreModule.forRoot(
+            {},
+            {
+              serializer: (action: any) => {
+                expect(action).toEqual(increment());
+                done();
+                return true;
+              },
+            }
+          ),
+        ],
+      });
+
+      TestBed.get(Store).dispatch(increment());
+    });
+
+    it('should rethrow the error of the custom serializer', () => {
+      TestBed.configureTestingModule({
+        imports: [
+          StoreModule.forRoot(
+            {},
+            {
+              serializer: (action: any) => {
+                throw new Error('An error');
+              },
+            }
+          ),
+        ],
+      });
+
+      expect(() => TestBed.get(Store).dispatch(increment())).toThrowError(
+        'An error'
+      );
+    });
+
+    it('should be possible to turn off serialization checks', () => {
+      TestBed.configureTestingModule({
+        imports: [
+          StoreModule.forRoot(
+            {},
+            {
+              serializer: null,
+            }
+          ),
+        ],
+      });
+
+      expect(() =>
+        TestBed.get(Store).dispatch(incrementNotSerializable())
+      ).not.toThrowError();
+    });
+
+    it("shouldn't check if an action is serializable in prod mode", () => {
+      setup();
+      const spy = spyOn(ngCore, 'isDevMode').and.returnValue(false);
+      expect(() =>
+        store.dispatch(incrementNotSerializable())
+      ).not.toThrowError();
     });
   });
 });

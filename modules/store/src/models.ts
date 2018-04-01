@@ -36,3 +36,7 @@ export interface StoreFeature<T, V extends Action = Action> {
 export interface Selector<T, V> {
   (state: T): V;
 }
+
+export type ActionSerializer<V extends Action = Action> = (
+  action: V
+) => boolean;

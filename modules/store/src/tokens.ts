@@ -30,3 +30,4 @@ export const _FEATURE_REDUCERS_TOKEN = new InjectionToken(
 export const FEATURE_REDUCERS = new InjectionToken(
   '@ngrx/store Feature Reducers'
 );
+export const ACTION_SERIALIZER = new InjectionToken('@ngrx/store serializer');

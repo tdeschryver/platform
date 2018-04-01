@@ -338,10 +338,11 @@ describe('ngRx Store', () => {
         ],
       });
 
-      TestBed.get(Store).dispatch(increment());
+      store = TestBed.get(Store);
+      store.dispatch(increment());
     });
 
-    it('should rethrow the error of the custom serializer', () => {
+    it('should rethrow errors', () => {
       TestBed.configureTestingModule({
         imports: [
           StoreModule.forRoot(
@@ -355,9 +356,8 @@ describe('ngRx Store', () => {
         ],
       });
 
-      expect(() => TestBed.get(Store).dispatch(increment())).toThrowError(
-        'An error'
-      );
+      store = TestBed.get(Store);
+      expect(() => store.dispatch(increment())).toThrowError('An error');
     });
 
     it('should be possible to turn off serialization checks', () => {
@@ -372,8 +372,9 @@ describe('ngRx Store', () => {
         ],
       });
 
+      store = TestBed.get(Store);
       expect(() =>
-        TestBed.get(Store).dispatch(incrementNotSerializable())
+        store.dispatch(incrementNotSerializable())
       ).not.toThrowError();
     });
 

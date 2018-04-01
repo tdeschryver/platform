@@ -25,6 +25,17 @@ export type MetaReducer<T, V extends Action = Action> = (
   reducer: ActionReducer<T, V>
 ) => ActionReducer<T, V>;
 
+export type ActionSerializer<V extends Action = Action> = (
+  action: V
+) => boolean;
+
+export type StoreConfig<T, V extends Action = Action> = {
+  initialState?: InitialState<T>;
+  reducerFactory?: ActionReducerFactory<T, V>;
+  metaReducers?: MetaReducer<T, V>[];
+  serializer?: ActionSerializer<V> | null;
+};
+
 export interface StoreFeature<T, V extends Action = Action> {
   key: string;
   reducers: ActionReducerMap<T, V> | ActionReducer<T, V>;
@@ -36,7 +47,3 @@ export interface StoreFeature<T, V extends Action = Action> {
 export interface Selector<T, V> {
   (state: T): V;
 }
-
-export type ActionSerializer<V extends Action = Action> = (
-  action: V
-) => boolean;

@@ -10,13 +10,12 @@ import {
   Action,
   ActionReducer,
   ActionReducerMap,
-  ActionReducerFactory,
   StoreFeature,
   InitialState,
   MetaReducer,
-  ActionSerializer,
+  StoreConfig,
 } from './models';
-import { compose, combineReducers, createReducerFactory } from './utils';
+import { combineReducers, createReducerFactory } from './utils';
 import {
   INITIAL_STATE,
   INITIAL_REDUCERS,
@@ -84,13 +83,6 @@ export class StoreFeatureModule implements OnDestroy {
   }
 }
 
-export type StoreConfig<T, V extends Action = Action> = {
-  initialState?: InitialState<T>;
-  reducerFactory?: ActionReducerFactory<T, V>;
-  metaReducers?: MetaReducer<T, V>[];
-  serializer?: ActionSerializer<V> | null;
-};
-
 @NgModule({})
 export class StoreModule {
   static forRoot<T, V extends Action = Action>(
@@ -140,14 +132,7 @@ export class StoreModule {
         },
         {
           provide: ACTION_SERIALIZER,
-          useValue:
-            'serializer' in config
-              ? config.serializer || ((action: any) => true)
-              : // TODO: provide a better check?
-                (action: any) =>
-                  typeof action === 'object' &&
-                  action !== null &&
-                  JSON.parse(JSON.stringify(action)),
+          useValue: _createSerializer(config),
         },
         ACTIONS_SUBJECT_PROVIDERS,
         REDUCER_MANAGER_PROVIDERS,
@@ -240,4 +225,14 @@ export function _initialStateFactory(initialState: any): any {
   }
 
   return initialState;
+}
+
+function _createSerializer(config: StoreConfig<any, any>): any {
+  return 'serializer' in config
+    ? config.serializer || ((action: any) => true)
+    : // TODO: provide a better check?
+      (action: any) =>
+        typeof action === 'object' &&
+        action !== null &&
+        JSON.parse(JSON.stringify(action));
 }

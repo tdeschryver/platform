@@ -15,7 +15,7 @@ import {
   MetaReducer,
   StoreConfig,
 } from './models';
-import { combineReducers, createReducerFactory } from './utils';
+import { combineReducers, createReducerFactory, isPlainObject } from './utils';
 import {
   INITIAL_STATE,
   INITIAL_REDUCERS,
@@ -230,9 +230,19 @@ export function _initialStateFactory(initialState: any): any {
 function _createSerializer(config: StoreConfig<any, any>): any {
   return 'serializer' in config
     ? config.serializer || ((action: any) => true)
-    : // TODO: provide a better check?
-      (action: any) =>
-        typeof action === 'object' &&
-        action !== null &&
-        JSON.parse(JSON.stringify(action));
+    : serialize;
+
+  function serialize(action: any) {
+    if (isPlainObject(action)) {
+      return true;
+    }
+
+    console.warn(
+      'NgRx: Actions must be plain objects. This will become an error in NgRx 7.',
+      'The action that was passed:',
+      action
+    );
+
+    return true;
+  }
 }

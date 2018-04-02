@@ -20,12 +20,6 @@ export class ActionsSubject extends BehaviorSubject<Action>
   }
 
   next(action: Action): void {
-    if (typeof action === 'undefined') {
-      throw new TypeError(`Actions must be objects`);
-    } else if (typeof action.type === 'undefined') {
-      throw new TypeError(`Actions must have a type property`);
-    }
-
     if (isDevMode()) {
       try {
         if (!this.serializer(action)) {
@@ -34,6 +28,10 @@ export class ActionsSubject extends BehaviorSubject<Action>
       } catch (error) {
         throw error;
       }
+    }
+
+    if (typeof action.type === 'undefined') {
+      throw new TypeError(`Actions must have a type property`);
     }
 
     super.next(action);

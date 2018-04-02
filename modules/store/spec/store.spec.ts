@@ -304,12 +304,15 @@ describe('ngRx Store', () => {
   });
 
   describe('action serialization', () => {
+    class FooBar {}
     const increment = () => ({ type: 'INCREMENT' });
-    const incrementNotSerializable = () => {
-      let increment: any = { type: 'INCREMENT' };
-      increment.self = increment;
-      return increment;
-    };
+    const notSeriazables = (): any[] => [
+      new FooBar(),
+      new Date(),
+      [1, 2, 3],
+      null,
+      () => {},
+    ];
 
     it('should provide a default serializer', () => {
       setup();
@@ -319,7 +322,18 @@ describe('ngRx Store', () => {
 
     it("should throw an error when an action isn't serializable", () => {
       setup();
-      expect(() => store.dispatch(incrementNotSerializable())).toThrowError();
+
+      // test for now, remove when we're at NgRx 7 and uncomment the expect underneath
+      const spy = spyOn(console, 'warn').and.callThrough();
+      notSeriazables().forEach(p => {
+        spy.calls.reset();
+        expect(() => store.dispatch(p)).toThrowError();
+        expect(spy).toHaveBeenCalled();
+
+        // expect(() => store.dispatch(p)).toThrowError(
+        //   'Actions must be plain objects.'
+        // );
+      });
     });
 
     it('should be possible to provide a custom serializer', (done: any) => {
@@ -342,24 +356,6 @@ describe('ngRx Store', () => {
       store.dispatch(increment());
     });
 
-    it('should rethrow errors', () => {
-      TestBed.configureTestingModule({
-        imports: [
-          StoreModule.forRoot(
-            {},
-            {
-              serializer: (action: any) => {
-                throw new Error('An error');
-              },
-            }
-          ),
-        ],
-      });
-
-      store = TestBed.get(Store);
-      expect(() => store.dispatch(increment())).toThrowError('An error');
-    });
-
     it('should be possible to turn off serialization checks', () => {
       TestBed.configureTestingModule({
         imports: [
@@ -373,17 +369,33 @@ describe('ngRx Store', () => {
       });
 
       store = TestBed.get(Store);
-      expect(() =>
-        store.dispatch(incrementNotSerializable())
-      ).not.toThrowError();
+
+      // test for now, remove when we're at NgRx 7 and uncomment the expect underneath
+      const spy = spyOn(console, 'warn').and.callThrough();
+      expect(() => store.dispatch(notSeriazables()[0])).toThrowError(
+        'Actions must have a type property'
+      );
+      expect(spy).not.toHaveBeenCalled();
+
+      // expect(() => store.dispatch(notSeriazables()[0])).not.toThrowError(
+      //   'Actions must be plain objects.'
+      // );
     });
 
     it("shouldn't check if an action is serializable in prod mode", () => {
       setup();
-      const spy = spyOn(ngCore, 'isDevMode').and.returnValue(false);
-      expect(() =>
-        store.dispatch(incrementNotSerializable())
-      ).not.toThrowError();
+      spyOn(ngCore, 'isDevMode').and.returnValue(false);
+
+      // test for now, remove when we're at NgRx 7 and uncomment the expect underneath
+      const spy = spyOn(console, 'warn').and.callThrough();
+      expect(() => store.dispatch(notSeriazables()[0])).toThrowError(
+        'Actions must have a type property'
+      );
+      expect(spy).not.toHaveBeenCalled();
+
+      // expect(() => store.dispatch(notSeriazables()[0])).not.toThrowError(
+      //   'Actions must be plain objects.'
+      // );
     });
   });
 });

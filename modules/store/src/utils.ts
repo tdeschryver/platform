@@ -115,3 +115,17 @@ export function createFeatureReducerFactory<T, V extends Action = Action>(
     };
   };
 }
+
+// taken from https://github.com/reactjs/redux/blob/3a17aef0468e279cba048411f8f91dce07c55a7e/src/utils/isPlainObject.js
+export function isPlainObject(obj: any) {
+  if (typeof obj !== 'object' || obj === null) {
+    return false;
+  }
+
+  let proto = obj;
+  while (Object.getPrototypeOf(proto) !== null) {
+    proto = Object.getPrototypeOf(proto);
+  }
+
+  return Object.getPrototypeOf(obj) === proto;
+}

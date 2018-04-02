@@ -9,3 +9,4 @@ export {
   STORE_FEATURES,
 } from './tokens';
 export { StoreRootModule, StoreFeatureModule } from './store_module';
+export { isPlainObject } from './utils';

@@ -1,6 +1,8 @@
 import * as ngCore from '@angular/core'; // so we can use the `spyOn` method
 import { TestBed } from '@angular/core/testing';
 import { hot } from 'jasmine-marbles';
+import { take } from 'rxjs/operators';
+import * as utils from '../src/utils';
 import {
   ActionsSubject,
   ReducerManager,
@@ -15,10 +17,12 @@ import {
   INCREMENT,
   DECREMENT,
   RESET,
+  Increment,
+  Decrement,
+  Reset,
 } from './fixtures/counter';
 import Spy = jasmine.Spy;
 import any = jasmine.any;
-import { take } from 'rxjs/operators';
 
 interface TestAppSchema {
   counter1: number;
@@ -31,13 +35,14 @@ describe('ngRx Store', () => {
   let store: Store<TestAppSchema>;
   let dispatcher: ActionsSubject;
 
-  function setup(initialState: any = { counter1: 0, counter2: 1 }) {
-    const reducers = {
+  function setup(
+    initialState: any = { counter1: 0, counter2: 1 },
+    reducers: any = {
       counter1: counterReducer,
       counter2: counterReducer,
       counter3: counterReducer,
-    };
-
+    }
+  ) {
     TestBed.configureTestingModule({
       imports: [StoreModule.forRoot(reducers, { initialState })],
     });
@@ -78,12 +83,12 @@ describe('ngRx Store', () => {
       const actionSequence = '--a--b--c--d--e--f--g';
       const stateSequence = 'i-w-----x-----y--z---';
       const actionValues = {
-        a: { type: INCREMENT },
+        a: Increment(),
         b: { type: 'OTHER' },
-        c: { type: RESET },
+        c: Reset(),
         d: { type: 'OTHER' }, // reproduces https://github.com/ngrx/platform/issues/880 because state is falsey
-        e: { type: INCREMENT },
-        f: { type: INCREMENT },
+        e: Increment(),
+        f: Increment(),
         g: { type: 'OTHER' },
       };
       const counterSteps = hot(actionSequence, actionValues);
@@ -149,13 +154,31 @@ describe('ngRx Store', () => {
       expect(store).toBeDefined();
     });
 
+    it('should freeze state and action on dispatch', () => {
+      const spy = spyOn(utils, 'freeze');
+      store.dispatch(Increment());
+      expect(spy).toHaveBeenCalledWith({
+        counter1: 0,
+        counter2: 1,
+        counter3: 0,
+      });
+      expect(spy).toHaveBeenCalledWith(Increment());
+    });
+
+    it("shouldn't freeze state and action when not in dev mode", () => {
+      turnDevModeOff();
+      const spy = spyOn(utils, 'freeze');
+      store.dispatch(Increment());
+      expect(spy).not.toHaveBeenCalled();
+    });
+
     const actionSequence = '--a--b--c--d--e';
     const actionValues = {
-      a: { type: INCREMENT },
-      b: { type: INCREMENT },
-      c: { type: DECREMENT },
-      d: { type: RESET },
-      e: { type: INCREMENT },
+      a: Increment(),
+      b: Increment(),
+      c: Decrement(),
+      d: Reset(),
+      e: Increment(),
     };
 
     it('should let you select state with a key name', () => {
@@ -296,7 +319,7 @@ describe('ngRx Store', () => {
       });
 
       store.removeReducer(key);
-      store.dispatch({ type: INCREMENT });
+      store.dispatch(Increment());
       store.pipe(take(1)).subscribe(val => {
         expect(val.counter4).toBeUndefined();
       });
@@ -305,7 +328,6 @@ describe('ngRx Store', () => {
 
   describe('action serialization', () => {
     class FooBar {}
-    const increment = () => ({ type: 'INCREMENT' });
     const notSeriazables = (): any[] => [
       new FooBar(),
       new Date(),
@@ -343,7 +365,7 @@ describe('ngRx Store', () => {
             {},
             {
               serializer: (action: any) => {
-                expect(action).toEqual(increment());
+                expect(action).toEqual(Increment());
                 done();
                 return true;
               },
@@ -353,7 +375,7 @@ describe('ngRx Store', () => {
       });
 
       store = TestBed.get(Store);
-      store.dispatch(increment());
+      store.dispatch(Increment());
     });
 
     it('should be possible to turn off serialization checks', () => {
@@ -384,7 +406,7 @@ describe('ngRx Store', () => {
 
     it("shouldn't check if an action is serializable in prod mode", () => {
       setup();
-      spyOn(ngCore, 'isDevMode').and.returnValue(false);
+      turnDevModeOff();
 
       // test for now, remove when we're at NgRx 7 and uncomment the expect underneath
       const spy = spyOn(console, 'warn').and.callThrough();
@@ -399,3 +421,7 @@ describe('ngRx Store', () => {
     });
   });
 });
+
+function turnDevModeOff() {
+  spyOn(ngCore, 'isDevMode').and.returnValue(false);
+}

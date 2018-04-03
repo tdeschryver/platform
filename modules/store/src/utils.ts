@@ -5,6 +5,7 @@ import {
   ActionReducerMap,
   MetaReducer,
 } from './models';
+import * as deepFreeze from 'deep-freeze';
 
 export function combineReducers<T, V extends Action = Action>(
   reducers: ActionReducerMap<T, V>,
@@ -129,3 +130,5 @@ export function isPlainObject(obj: any) {
 
   return Object.getPrototypeOf(obj) === proto;
 }
+
+export const freeze = (obj: any) => (obj ? deepFreeze(obj) : {});

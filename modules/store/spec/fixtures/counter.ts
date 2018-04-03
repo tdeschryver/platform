@@ -4,6 +4,10 @@ export const INCREMENT = 'INCREMENT';
 export const DECREMENT = 'DECREMENT';
 export const RESET = 'RESET';
 
+export const Increment = () => ({ type: INCREMENT });
+export const Decrement = () => ({ type: DECREMENT });
+export const Reset = () => ({ type: RESET });
+
 export function counterReducer(state = 0, action: Action) {
   switch (action.type) {
     case INCREMENT:

@@ -1,4 +1,10 @@
-import { Inject, Injectable, OnDestroy, Provider } from '@angular/core';
+import {
+  Inject,
+  Injectable,
+  OnDestroy,
+  Provider,
+  isDevMode,
+} from '@angular/core';
 import {
   BehaviorSubject,
   Observable,
@@ -6,14 +12,13 @@ import {
   Subscription,
 } from 'rxjs';
 import { observeOn, scan, withLatestFrom } from 'rxjs/operators';
-import * as deepFreeze from 'deep-freeze';
 
 import { ActionsSubject, INIT } from './actions_subject';
 import { Action, ActionReducer } from './models';
 import { ReducerObservable } from './reducer_manager';
 import { ScannedActionsSubject } from './scanned_actions_subject';
 import { INITIAL_STATE } from './tokens';
-import { isDevMode } from '@angular/core';
+import { freeze } from './utils';
 export abstract class StateObservable extends Observable<any> {}
 
 @Injectable()
@@ -49,11 +54,6 @@ export class State<T> extends BehaviorSubject<any> implements OnDestroy {
     );
 
     this.stateSubscription = stateAndAction$.subscribe(({ state, action }) => {
-      if (isDevMode()) {
-        deepFreeze(state);
-        deepFreeze(action);
-      }
-
       this.next(state);
       scannedActions.next(action);
     });
@@ -74,6 +74,11 @@ export function reduceState<T, V extends Action = Action>(
   [action, reducer]: [V, ActionReducer<T, V>]
 ): StateActionPair<T, V> {
   const { state } = stateActionPair;
+  if (isDevMode()) {
+    freeze(state);
+    freeze(action);
+  }
+
   return { state: reducer(state, action), action };
 }
 

@@ -9,6 +9,7 @@ import {
   Login,
   LoginFailure,
   LoginSuccess,
+  AuthActionsUnion,
 } from '../actions/auth.actions';
 import { Authenticate } from '../models/user';
 import { AuthService } from '../services/auth.service';
@@ -17,7 +18,7 @@ import { AuthService } from '../services/auth.service';
 export class AuthEffects {
   @Effect()
   login$ = this.actions$.pipe(
-    ofType<Login>(AuthActionTypes.Login),
+    ofType(AuthActionTypes.Login),
     map(action => action.payload),
     exhaustMap((auth: Authenticate) =>
       this.authService
@@ -44,7 +45,7 @@ export class AuthEffects {
   );
 
   constructor(
-    private actions$: Actions,
+    private actions$: Actions<AuthActionsUnion>,
     private authService: AuthService,
     private router: Router
   ) {}

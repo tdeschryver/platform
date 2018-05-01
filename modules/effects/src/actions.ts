@@ -4,7 +4,7 @@ import { Observable, Operator, OperatorFunction } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
 @Injectable()
-export class Actions<V = Action> extends Observable<V> {
+export class Actions<V extends Action> extends Observable<V> {
   constructor(@Inject(ScannedActionsSubject) source?: Observable<V>) {
     super();
 
@@ -13,22 +13,23 @@ export class Actions<V = Action> extends Observable<V> {
     }
   }
 
-  lift<R>(operator: Operator<V, R>): Observable<R> {
+  lift<R extends Action>(operator: Operator<V, R>): Observable<R> {
     const observable = new Actions<R>();
     observable.source = this;
     observable.operator = operator;
     return observable;
   }
 
-  ofType<V2 extends V = V>(...allowedTypes: string[]): Actions<V2> {
-    return ofType<any>(...allowedTypes)(this as Actions<any>) as Actions<V2>;
+  ofType<V2 extends V, T extends string>(...allowedTypes: T[]): Actions<V2> {
+    return ofType<any, T>(...allowedTypes)(this as Actions<any>) as Actions<V2>;
   }
 }
 
-export function ofType<T extends Action>(
-  ...allowedTypes: string[]
-): OperatorFunction<Action, T> {
-  return filter((action: Action): action is T =>
-    allowedTypes.some(type => type === action.type)
-  );
+export function ofType<V extends Action, Type extends string>(
+  ...types: Type[]
+): OperatorFunction<V, Extract<V, { type: Type }>>;
+export function ofType(...types: string[]) {
+  return function(source: Observable<any>) {
+    return source.pipe(filter(action => types.indexOf(action.type) !== -1));
+  };
 }

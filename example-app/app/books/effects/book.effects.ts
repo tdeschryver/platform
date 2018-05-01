@@ -17,6 +17,7 @@ import {
   Search,
   SearchComplete,
   SearchError,
+  BookActionsUnion,
 } from '../actions/book.actions';
 import { Book } from '../models/book';
 import { Scheduler } from 'rxjs/internal/Scheduler';
@@ -41,7 +42,7 @@ export const SEARCH_SCHEDULER = new InjectionToken<Scheduler>(
 export class BookEffects {
   @Effect()
   search$: Observable<Action> = this.actions$.pipe(
-    ofType<Search>(BookActionTypes.Search),
+    ofType(BookActionTypes.Search),
     debounceTime(this.debounce || 300, this.scheduler || asyncScheduler),
     map(action => action.payload),
     switchMap(query => {
@@ -65,7 +66,7 @@ export class BookEffects {
   );
 
   constructor(
-    private actions$: Actions,
+    private actions$: Actions<BookActionsUnion>,
     private googleBooks: GoogleBooksService,
     @Optional()
     @Inject(SEARCH_DEBOUNCE)

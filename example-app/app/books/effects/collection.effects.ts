@@ -16,6 +16,7 @@ import {
   RemoveBook,
   RemoveBookFail,
   RemoveBookSuccess,
+  CollectionActionsUnion,
 } from './../actions/collection.actions';
 
 @Injectable()
@@ -51,7 +52,7 @@ export class CollectionEffects {
 
   @Effect()
   addBookToCollection$: Observable<Action> = this.actions$.pipe(
-    ofType<AddBook>(CollectionActionTypes.AddBook),
+    ofType(CollectionActionTypes.AddBook),
     map(action => action.payload),
     mergeMap(book =>
       this.db
@@ -65,7 +66,7 @@ export class CollectionEffects {
 
   @Effect()
   removeBookFromCollection$: Observable<Action> = this.actions$.pipe(
-    ofType<RemoveBook>(CollectionActionTypes.RemoveBook),
+    ofType(CollectionActionTypes.RemoveBook),
     map(action => action.payload),
     mergeMap(book =>
       this.db
@@ -77,5 +78,8 @@ export class CollectionEffects {
     )
   );
 
-  constructor(private actions$: Actions, private db: Database) {}
+  constructor(
+    private actions$: Actions<CollectionActionsUnion>,
+    private db: Database
+  ) {}
 }

@@ -11,7 +11,7 @@ import { hot, cold } from 'jasmine-marbles';
 import { of } from 'rxjs';
 
 describe('Actions', function() {
-  let actions$: Actions;
+  let actions$: Actions<any>;
   let dispatcher: ScannedActionsSubject;
 
   const ADD = 'ADD';

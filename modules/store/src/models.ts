@@ -1,6 +1,6 @@
-export interface Action<Type = string> {
+export type Action<Type = string> = {
   type: Type;
-}
+};
 
 export type TypeId<T> = () => T;
 

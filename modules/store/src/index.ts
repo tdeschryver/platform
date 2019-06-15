@@ -25,6 +25,7 @@ export {
   createSelector,
   createSelectorFactory,
   createFeatureSelector,
+  createSelectorFactoryWithCache,
   defaultMemoize,
   defaultStateFn,
   MemoizeFn,

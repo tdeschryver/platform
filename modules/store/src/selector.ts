@@ -606,3 +606,23 @@ export function createFeatureSelector(
     (featureState: any) => featureState
   );
 }
+
+type SelectorFactoryWithParam<ParamType, State, Result> = (
+  param: ParamType
+) => MemoizedSelector<State, Result>;
+
+export function createSelectorFactoryWithCache<ParamType, State, Result>(
+  selectorFactory: SelectorFactoryWithParam<ParamType, State, Result>
+): SelectorFactoryWithParam<ParamType, State, Result> {
+  const selectors: Map<ParamType, MemoizedSelector<State, Result>> = new Map();
+
+  return (param: ParamType) => {
+    // add .cleanCache static on it to clear the map
+    let selector = selectors.get(param);
+    if (selector === undefined) {
+      selector = selectorFactory(param);
+      selectors.set(param, selector);
+    }
+    return selector;
+  };
+}

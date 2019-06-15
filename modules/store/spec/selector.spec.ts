@@ -6,6 +6,7 @@ import {
   createSelectorFactory,
   resultMemoize,
   MemoizedProjection,
+  createSelectorFactoryWithCache,
 } from '@ngrx/store';
 import { map, distinctUntilChanged } from 'rxjs/operators';
 
@@ -572,6 +573,92 @@ describe('Selectors', () => {
       expect(result2).toBeDefined();
       expect(result1).not.toBe(result2);
       expect(result1).not.toEqual(result2);
+    });
+  });
+
+  describe('createSelectorFactoryWithCache', () => {
+    const mockState = {
+      propA: {
+        a: 1,
+        b: 2,
+        c: 3,
+      },
+      propB: {
+        d: 4,
+        e: 5,
+        f: 6,
+      },
+    };
+
+    const selectPropA = createFeatureSelector('propA');
+
+    describe('Use a selector created by createSelectorFactoryWithCache', () => {
+      let selectCMultipliedBy;
+      let insideProjection;
+      beforeEach(() => {
+        insideProjection = jest.fn();
+        selectCMultipliedBy = createSelectorFactoryWithCache(
+          (multiplier: number) =>
+            createSelector(
+              selectPropA,
+              (propA: { a: number; b: number; c: number }) => {
+                insideProjection();
+                return propA.c * multiplier;
+              }
+            )
+        );
+      });
+
+      it('Should select the correct data', () => {
+        expect(selectCMultipliedBy(4)(mockState)).toEqual(
+          mockState.propA.c * 4
+        );
+      });
+
+      describe('Using the selector with several different parameters', () => {
+        it('projection function should be called once for each parameter', () => {
+          const times5 = selectCMultipliedBy(5)(mockState);
+          const times7 = selectCMultipliedBy(7)(mockState);
+          expect(insideProjection).toBeCalledTimes(2);
+        });
+
+        it('projection function should not be called again if called with the same parameter', () => {
+          const times5 = selectCMultipliedBy(5)(mockState);
+          const times7 = selectCMultipliedBy(7)(mockState);
+          const times5again = selectCMultipliedBy(5)(mockState);
+          expect(insideProjection).toBeCalledTimes(2);
+        });
+
+        it('selector data should be correct even when called with different params', () => {
+          const times5 = selectCMultipliedBy(5)(mockState);
+          const times7 = selectCMultipliedBy(7)(mockState);
+          const times5again = selectCMultipliedBy(5)(mockState);
+          const times7again = selectCMultipliedBy(7)(mockState);
+          expect(times5).toEqual(mockState.propA.c * 5);
+          expect(times5again).toEqual(mockState.propA.c * 5);
+          expect(times7).toEqual(mockState.propA.c * 7);
+          expect(times7again).toEqual(mockState.propA.c * 7);
+        });
+      });
+
+      describe('underlying state change', () => {
+        it('projection should be called again if state changed', () => {
+          expect(selectCMultipliedBy(5)(mockState)).toEqual(
+            mockState.propA.c * 5
+          );
+          expect(insideProjection).toBeCalledTimes(1);
+          expect(selectCMultipliedBy(5)(mockState)).toEqual(
+            mockState.propA.c * 5
+          );
+          expect(insideProjection).toBeCalledTimes(1);
+          expect(
+            selectCMultipliedBy(5)(
+              Object.assign({}, mockState, { propA: { c: 100 } })
+            )
+          ).toEqual(500);
+          expect(insideProjection).toBeCalledTimes(2);
+        });
+      });
     });
   });
 });
